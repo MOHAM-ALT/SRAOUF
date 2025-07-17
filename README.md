@@ -338,6 +338,12 @@ speaker-test -t sine -f 1000 -l 1
 
 ---
 
+اصلاحات 
+# إصلاح شامل بأمر واحد
+sudo pkill -f apt; sudo rm /var/lib/dpkg/lock*; sudo dpkg --configure -a; sudo apt --fix-broken install; sudo apt clean; echo "✅ Fixed!"
+
+
+
 ## 📊 متطلبات النظام
 
 ### الحد الأدنى:
