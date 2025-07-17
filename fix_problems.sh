@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# SRAOUF Ultimate Fix & Update Script
-# سكريپت الإصلاح والتحديث الشامل - يصلح كل شيء بأمر واحد
-# الإصدار: 3.0 ULTIMATE EDITION
+# SRAOUF Ultimate Fix & Update Script - FIXED VERSION
+# سكريپت الإصلاح والتحديث الشامل - النسخة المُصححة
+# الإصدار: 3.1 FIXED EDITION
 
 set -e
 
@@ -175,7 +175,7 @@ create_optimized_config() {
     if [[ "$PI_VERSION" == "5" ]]; then
         # إعدادات Pi 5 المتقدمة
         cat > ~/.config/retroarch/retroarch.cfg << 'EOF'
-# RETROARCH OPTIMIZED FOR RASPBERRY PI 5 - ULTIMATE PERFORMANCE
+# RETROARCH OPTIMIZED FOR RASPBERRY PI 5
 video_driver = "vulkan"
 video_width = 1920
 video_height = 1080
@@ -362,21 +362,6 @@ ctl.!default {
     type hw
     card 0
 }
-pcm.dmixer {
-    type dmix
-    ipc_key 1024
-    slave {
-        pcm "hw:0,0"
-        period_time 0
-        period_size 1024
-        buffer_size 8192
-        rate 48000
-    }
-    bindings {
-        0 0
-        1 1
-    }
-}
 EOF
     
     # ضبط مستويات الصوت
@@ -409,20 +394,13 @@ KERNEL=="event[0-9]*", GROUP="input", MODE="0664"
 # Xbox Controllers
 ATTRS{idVendor}=="045e", ATTRS{idProduct}=="028e", GROUP="input", MODE="0664"
 ATTRS{idVendor}=="045e", ATTRS{idProduct}=="02d1", GROUP="input", MODE="0664"
-ATTRS{idVendor}=="045e", ATTRS{idProduct}=="02dd", GROUP="input", MODE="0664"
-ATTRS{idVendor}=="045e", ATTRS{idProduct}=="0b12", GROUP="input", MODE="0664"
 
 # PlayStation Controllers
 ATTRS{idVendor}=="054c", ATTRS{idProduct}=="05c4", GROUP="input", MODE="0664"
 ATTRS{idVendor}=="054c", ATTRS{idProduct}=="09cc", GROUP="input", MODE="0664"
-ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0ce6", GROUP="input", MODE="0664"
 
 # Nintendo Controllers
 ATTRS{idVendor}=="057e", ATTRS{idProduct}=="2009", GROUP="input", MODE="0664"
-ATTRS{idVendor}=="057e", ATTRS{idProduct}=="2017", GROUP="input", MODE="0664"
-
-# 8BitDo Controllers
-ATTRS{idVendor}=="2dc8", GROUP="input", MODE="0664"
 EOF
     
     # إعادة تحميل قواعد udev
@@ -435,94 +413,6 @@ EOF
     
     print_success "Advanced controller support configured"
     log_action "Controller setup completed"
-}
-
-# تحميل وتثبيت أصول إضافية
-download_additional_assets() {
-    print_step "Downloading additional assets and improvements..."
-    
-    cd ~/.config/retroarch/
-    
-    # تحميل شيدرز عالية الجودة
-    if [[ ! -d "shaders" ]]; then
-        print_info "Downloading high-quality shaders..."
-        git clone --depth 1 https://github.com/libretro/slang-shaders.git shaders/ 2>/dev/null || {
-            print_warning "Could not download shaders (internet required)"
-        }
-    fi
-    
-    # تحميل قواعد بيانات الألعاب
-    if [[ ! -d "database" ]]; then
-        print_info "Downloading game databases..."
-        mkdir -p database
-        cd database
-        wget -q "https://github.com/libretro/libretro-database/archive/master.zip" -O database.zip 2>/dev/null && {
-            unzip -q database.zip
-            mv libretro-database-master/* .
-            rm -rf libretro-database-master database.zip
-        } || print_warning "Could not download databases"
-        cd ..
-    fi
-    
-    # تحميل خطوط محسنة
-    mkdir -p assets/fonts
-    cd assets/fonts
-    wget -q "https://github.com/libretro/common-shaders/raw/master/xmb/monospace.ttf" -O menu.ttf 2>/dev/null || print_warning "Could not download fonts"
-    
-    print_success "Additional assets downloaded"
-    log_action "Assets download completed"
-}
-
-# إنشاء أدوات مساعدة متقدمة
-create_advanced_tools() {
-    print_step "Creating advanced helper tools..."
-    
-    mkdir -p "$SRAOUF_DIR/scripts"
-    
-    # أداة اختبار الأداء
-    cat > "$SRAOUF_DIR/scripts/performance_test.sh" << 'EOF'
-#!/bin/bash
-echo "🧪 SRAOUF Performance Test"
-echo "=========================="
-echo "CPU: $(lscpu | grep 'Model name' | cut -d: -f2 | xargs)"
-echo "Memory: $(free -h | grep '^Mem:' | awk '{print $2}')"
-echo "GPU Memory: $(vcgencmd get_mem gpu 2>/dev/null || echo 'N/A')"
-echo "Temperature: $(vcgencmd measure_temp 2>/dev/null || echo 'N/A')"
-echo "RetroArch Version: $(retroarch --version 2>/dev/null | head -1 || echo 'Not installed')"
-echo "Cores Found: $(ls /usr/lib/*/libretro/*.so 2>/dev/null | wc -l)"
-echo ""
-echo "🎮 Testing RetroArch launch..."
-timeout 5s retroarch --menu --quit && echo "✅ RetroArch OK" || echo "❌ RetroArch Failed"
-EOF
-    
-    # أداة إعادة تعيين شاملة
-    cat > "$SRAOUF_DIR/scripts/nuclear_reset.sh" << 'EOF'
-#!/bin/bash
-echo "💥 NUCLEAR RESET - This will remove EVERYTHING"
-read -p "Are you sure? Type 'YES' to continue: " confirm
-if [[ "$confirm" == "YES" ]]; then
-    sudo apt remove --purge retroarch* libretro-* emulationstation* -y
-    rm -rf ~/.config/retroarch/
-    rm -rf ~/.emulationstation/
-    rm -rf ~/SRAOUF/
-    echo "💥 Everything removed. Run install.sh to start fresh."
-else
-    echo "❌ Cancelled"
-fi
-EOF
-    
-    # أداة تحديث سريع
-    cat > "$SRAOUF_DIR/scripts/quick_update.sh" << 'EOF'
-#!/bin/bash
-echo "⚡ Quick Update"
-sudo apt update && sudo apt upgrade retroarch libretro-* -y
-echo "✅ Updated"
-EOF
-    
-    chmod +x "$SRAOUF_DIR/scripts"/*.sh
-    
-    print_success "Advanced tools created"
-    log_action "Advanced tools creation completed"
 }
 
 # اختبار شامل ومتقدم
@@ -587,7 +477,7 @@ run_comprehensive_test() {
     if [[ $controllers_count -gt 0 ]]; then
         print_success "✅ Controllers: $controllers_count detected"
     else
-        print_info "ℹ️ Controllers: None connected (this is normal)"
+        print_info "ℹ️ Controllers: None connected (normal)"
     fi
     
     # اختبار الصوت
@@ -596,30 +486,6 @@ run_comprehensive_test() {
     else
         print_warning "⚠️ Audio: May have issues"
         ((warnings++))
-    fi
-    
-    # اختبار درجة الحرارة (للـ Pi)
-    if command -v vcgencmd &> /dev/null; then
-        local temp=$(vcgencmd measure_temp 2>/dev/null | grep -o '[0-9.]*')
-        if [[ -n "$temp" ]]; then
-            if (( $(echo "$temp < 70" | bc -l) )); then
-                print_success "✅ Temperature: ${temp}°C (Good)"
-            else
-                print_warning "⚠️ Temperature: ${temp}°C (Hot)"
-                ((warnings++))
-            fi
-        fi
-    fi
-    
-    # اختبار ذاكرة GPU
-    if command -v vcgencmd &> /dev/null; then
-        local gpu_mem=$(vcgencmd get_mem gpu 2>/dev/null | grep -o '[0-9]*')
-        if [[ "$gpu_mem" -ge 128 ]]; then
-            print_success "✅ GPU Memory: ${gpu_mem}MB"
-        else
-            print_warning "⚠️ GPU Memory: ${gpu_mem}MB (Low)"
-            ((warnings++))
-        fi
     fi
     
     # تقرير النتائج
@@ -636,63 +502,6 @@ run_comprehensive_test() {
     return $errors
 }
 
-# إنشاء تقرير مفصل
-create_detailed_report() {
-    print_step "Creating detailed system report..."
-    
-    local report_file="$SRAOUF_DIR/logs/system_report_$(date +%Y%m%d_%H%M%S).txt"
-    
-    cat > "$report_file" << EOF
-SRAOUF Ultimate Fix & Optimization Report
-========================================
-
-Date: $(date)
-Raspberry Pi Version: $PI_VERSION
-System Updated: $SYSTEM_UPDATED
-
-Hardware Information:
-$(cat /proc/cpuinfo | grep -E "(model name|Hardware|Revision)" | head -5)
-
-Memory Information:
-$(free -h)
-
-GPU Memory:
-$(vcgencmd get_mem gpu 2>/dev/null || echo "N/A")
-
-Temperature:
-$(vcgencmd measure_temp 2>/dev/null || echo "N/A")
-
-RetroArch Information:
-Version: $(retroarch --version 2>/dev/null | head -1 || echo "Not installed")
-Config: $(test -f ~/.config/retroarch/retroarch.cfg && echo "Present" || echo "Missing")
-Language: $(grep "user_language" ~/.config/retroarch/retroarch.cfg 2>/dev/null || echo "Not set")
-
-Cores Installed:
-$(ls /usr/lib/*/libretro/*.so 2>/dev/null | wc -l) cores found
-
-Controllers:
-$(ls /dev/input/js* 2>/dev/null | wc -l) controllers connected
-
-Audio Devices:
-$(aplay -l 2>/dev/null | grep "card" || echo "No audio devices found")
-
-System Optimizations Applied:
-✅ System fully updated
-✅ RetroArch upgraded to latest version
-✅ Configuration optimized for Pi $PI_VERSION
-✅ GPU memory optimized
-✅ Audio settings configured
-✅ Controller support enhanced
-✅ Additional assets downloaded
-✅ Advanced tools created
-
-Log file: $LOG_FILE
-EOF
-    
-    print_success "Detailed report saved: $report_file"
-    log_action "Detailed report created: $report_file"
-}
-
 # الدالة الرئيسية الشاملة
 main() {
     clear
@@ -705,25 +514,10 @@ main() {
     
     print_info "This script will:"
     print_info "🔄 Update your entire system"
-    print_info "🛠️ Performance test: $SRAOUF_DIR/scripts/performance_test.sh"
-    print_info "🔄 Quick update: $SRAOUF_DIR/scripts/quick_update.sh"
-    print_info "💥 Nuclear reset: $SRAOUF_DIR/scripts/nuclear_reset.sh"
-    print_info "📊 System report: Check logs folder for detailed report"
-    echo ""
-    print_warning "🔄 REBOOT RECOMMENDED for all optimizations to take effect:"
-    print_warning "   sudo reboot"
-    echo ""
-    print_success "🎊 Enjoy your optimized retro gaming experience!"
-    
-    log_action "Ultimate fix script completed successfully"
-}
-
-# تشغيل السكريپت
-main "$@" Fix all RetroArch issues"
+    print_info "🛠️ Fix all RetroArch issues"
     print_info "⚡ Optimize for your Pi model"
     print_info "🎮 Configure controllers"
     print_info "🔊 Fix audio issues"
-    print_info "📥 Download additional assets"
     print_info "🧪 Run comprehensive tests"
     echo ""
     
@@ -745,8 +539,6 @@ main "$@" Fix all RetroArch issues"
     optimize_system_settings
     fix_advanced_audio
     fix_advanced_controllers
-    download_additional_assets
-    create_advanced_tools
     
     # اختبار شامل
     if run_comprehensive_test; then
@@ -755,15 +547,23 @@ main "$@" Fix all RetroArch issues"
         print_warning "Some issues detected but system should work"
     fi
     
-    create_detailed_report
-    
     echo ""
     print_header "🎉 ULTIMATE FIX COMPLETED SUCCESSFULLY! 🎉"
     echo ""
     print_success "✅ Your Raspberry Pi $PI_VERSION is now fully optimized!"
     print_success "✅ RetroArch configured for maximum performance"
     print_success "✅ All issues fixed and system updated"
-    print_success "✅ Advanced tools and assets installed"
     echo ""
     print_info "🚀 To launch RetroArch: retroarch --menu"
-    print_info "🛠️
+    print_info "📊 Log file: $LOG_FILE"
+    echo ""
+    print_warning "🔄 REBOOT RECOMMENDED for all optimizations to take effect:"
+    print_warning "   sudo reboot"
+    echo ""
+    print_success "🎊 Enjoy your optimized retro gaming experience!"
+    
+    log_action "Ultimate fix script completed successfully"
+}
+
+# تشغيل السكريپت
+main "$@"
